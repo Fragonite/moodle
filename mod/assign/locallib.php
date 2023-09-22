@@ -6764,14 +6764,30 @@ class assign {
 
             $submission->status = ASSIGN_SUBMISSION_STATUS_SUBMITTED;
             $this->update_submission($submission, $userid, true, $instance->teamsubmission);
+            $users = [$userid];
+
+            if ($instance->teamsubmission && !$instance->requireallteammemberssubmit) {
+                $team = $this->get_submission_group_members($submission->groupid, true);
+
+                foreach ($team as $member) {
+                    if ($member->id != $userid) {
+                        $membersubmission = clone($submission);
+                        $this->update_submission($membersubmission, $member->id, true, $instance->teamsubmission);
+                        $users[] = $member->id;
+                    }
+                }
+            }
+
             $completion = new completion_info($this->get_course());
             if ($completion->is_enabled($this->get_course_module()) && $instance->completionsubmit) {
-                $this->update_activity_completion_records($instance->teamsubmission,
-                                                          $instance->requireallteammemberssubmit,
-                                                          $submission,
-                                                          $userid,
-                                                          COMPLETION_COMPLETE,
-                                                          $completion);
+                foreach ($users as $id) {
+                    $this->update_activity_completion_records($instance->teamsubmission,
+                        $instance->requireallteammemberssubmit,
+                        $submission,
+                        $id,
+                        COMPLETION_COMPLETE,
+                        $completion);
+                }
             }
 
             if (!empty($data->submissionstatement) && $USER->id == $userid) {

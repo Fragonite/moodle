@@ -178,6 +178,8 @@ class lib_test extends \advanced_testcase {
 
     /**
      * Test group submissions (MDL-78650).
+     * 
+     * @covers \assign::submit_for_grading
      */
     public function test_group_submission() {
         global $DB;
@@ -209,21 +211,25 @@ class lib_test extends \advanced_testcase {
         $submission2 = $assign->get_user_submission($student2->id, false);
 
         $this->assertNotFalse($submission1);
-        $this->assertFalse($submission2);
-        
+        $this->assertNotFalse($submission2);
+
         $groupsubmission1 = $assign->get_group_submission($student1->id, $group->id, false);
         $groupsubmission2 = $assign->get_group_submission($student2->id, $group->id, false);
 
         $this->assertNotFalse($groupsubmission1);
         $this->assertNotFalse($groupsubmission2);
 
-        $submissionrecord1 = $DB->get_record('assign_submission', ['assignment' => $assign->get_instance()->id, 'userid' => $student1->id]);
-        $submissionrecord2 = $DB->get_record('assign_submission', ['assignment' => $assign->get_instance()->id, 'userid' => $student2->id]);
+        $submissionrecord1 = $DB->get_record('assign_submission',
+            ['assignment' => $assign->get_instance()->id, 'userid' => $student1->id]);
+
+        $submissionrecord2 = $DB->get_record('assign_submission',
+            ['assignment' => $assign->get_instance()->id, 'userid' => $student2->id]);
 
         $this->assertNotFalse($submissionrecord1);
         $this->assertEquals($submissionrecord1->status, ASSIGN_SUBMISSION_STATUS_SUBMITTED);
 
-        $this->assertFalse($submissionrecord2);
+        $this->assertNotFalse($submissionrecord2);
+        $this->assertEquals($submissionrecord2->status, ASSIGN_SUBMISSION_STATUS_SUBMITTED);
     }
 
     /**
