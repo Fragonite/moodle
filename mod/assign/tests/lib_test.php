@@ -177,6 +177,56 @@ class lib_test extends \advanced_testcase {
     }
 
     /**
+     * Test group submissions (MDL-78650).
+     */
+    public function test_group_submission() {
+        global $DB;
+
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $student1 = $this->getDataGenerator()->create_and_enrol($course, 'student');
+        $student2 = $this->getDataGenerator()->create_and_enrol($course, 'student');
+
+        $group = $this->getDataGenerator()->create_group([
+            'courseid' => $course->id,
+        ]);
+        groups_add_member($group->id, $student1->id);
+        groups_add_member($group->id, $student2->id);
+
+        // Assignments have 'completionsubmit' set to 1 by default.
+        $assign = $this->create_instance($course, [
+            'requiresubmissionstatement' => 1,
+            'teamsubmission' => 1,
+            'completion' => 0,
+            'completionsubmit' => 1,
+        ]);
+
+        $this->add_submission($student1, $assign);
+        $this->submit_for_grading($student1, $assign, ['submissionstatement' => 'Hello, world!']);
+
+        $submission1 = $assign->get_user_submission($student1->id, false);
+        $submission2 = $assign->get_user_submission($student2->id, false);
+
+        $this->assertNotFalse($submission1);
+        $this->assertFalse($submission2);
+        
+        $groupsubmission1 = $assign->get_group_submission($student1->id, $group->id, false);
+        $groupsubmission2 = $assign->get_group_submission($student2->id, $group->id, false);
+
+        $this->assertNotFalse($groupsubmission1);
+        $this->assertNotFalse($groupsubmission2);
+
+        $submissionrecord1 = $DB->get_record('assign_submission', ['assignment' => $assign->get_instance()->id, 'userid' => $student1->id]);
+        $submissionrecord2 = $DB->get_record('assign_submission', ['assignment' => $assign->get_instance()->id, 'userid' => $student2->id]);
+
+        $this->assertNotFalse($submissionrecord1);
+        $this->assertEquals($submissionrecord1->status, ASSIGN_SUBMISSION_STATUS_SUBMITTED);
+
+        $this->assertFalse($submissionrecord2);
+    }
+
+    /**
      * Tests for mod_assign_refresh_events.
      */
     public function test_assign_refresh_events() {
