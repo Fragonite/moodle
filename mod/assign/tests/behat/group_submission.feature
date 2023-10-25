@@ -29,6 +29,47 @@ Feature: Group assignment submissions
       | Group 1 | C1     | G1       |
 
   @javascript
+  Scenario: Confirm that group submissions are removed from the timeline
+    Given the following "activity" exists:
+      | activity                            | assign               |
+      | course                              | C1                   |
+      | name                                | Test assignment name |
+      | assignsubmission_onlinetext_enabled | 1                    |
+      | teamsubmission                      | 1                    |
+      | duedate                             | ##tomorrow##         |
+      | requiresubmissionstatement          | 1                    |
+    And the following "group members" exist:
+      | user     | group |
+      | student1 | G1    |
+      | student2 | G1    |
+    # Student1 checks the assignment is visible in the timeline
+    Given I am on the "Homepage" page logged in as student1
+    Then I should see "Test assignment name" in the "Timeline" "block"
+    # Student2 checks the assignment is visible in the timeline
+    Given I am on the "Homepage" page logged in as student2
+    Then I should see "Test assignment name" in the "Timeline" "block"
+    # Student2 submits the assignment
+    Given I am on the "Test assignment name" Activity page
+    And I press "Add submission"
+    And I set the field "Online text" to "Assignment submission text"
+    And I press "Save changes"
+    And I should see "Draft (not submitted)" in the "Submission status" "table_row"
+    When I press "Submit assignment"
+    Then I should see " have acknowledged the use of the works of other people."
+    And I press "Continue"
+    And I should see "Confirm submission"
+    And I should see "- Required"
+    And I set the field "submissionstatement" to "1"
+    And I press "Continue"
+    And I should see "Submitted for grading" in the "Submission status" "table_row"
+    # Student2 checks the timeline again
+    Given I am on the "Homepage" page
+    Then I should not see "Test assignment name" in the "Timeline" "block"
+    # Student1 checks the timeline again
+    Given I am on the "Homepage" page logged in as student1
+    Then I should not see "Test assignment name" in the "Timeline" "block"
+
+  @javascript
   Scenario: Switch between group modes
     Given the following "activity" exists:
       | activity         | assign                      |
