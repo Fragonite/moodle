@@ -181,12 +181,20 @@ class data_controller extends \core_customfield\data_controller {
         return $this->get_field()->get_configdata_property('defaultvalue');
     }
 
+    /**
+     * Implement the callback for backup, so Moodle knows how to backup this element.
+     * @param \backup_nested_element $customfieldelement
+     * @return void
+     */
     public function backup_define_structure(backup_nested_element $customfieldelement): void {
-        // load file record (or can it be multiple records?)
-        // $filerecord =
+        global $DB;
 
-        // Add it to the backup
-        // $customfieldelement->annotate_files(blah...);
+        // Retrieve all file records for this custom field.
+        // This could be unnecessary?
+        $files = $DB->get_records('files', ['component' => 'customfield_textarea', 'filearea' => 'value']);
+
+        // Confirmed to add at least images and videos to the backup.
+        $customfieldelement->annotate_files('customfield_textarea', 'value', 'id');
     }
 
     /**

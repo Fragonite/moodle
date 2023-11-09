@@ -361,6 +361,12 @@ abstract class data_controller {
         }
     }
 
+    /**
+     * Callback for backup, so Moodle knows how to backup this element.
+     * It is not an abstract function for backward compatibility purposes.
+     * @param \backup_nested_element $customfieldelement
+     * @return void
+     */
     public function backup_define_structure(backup_nested_element $customfieldelement): void {
     }
 
