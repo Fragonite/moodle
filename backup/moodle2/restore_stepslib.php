@@ -1825,7 +1825,7 @@ class restore_course_structure_step extends restore_structure_step {
      */
     protected $legacyallowedmodules = array();
 
-    protected function define_structure() {
+    protected function define_structure() { //
 
         $course = new restore_path_element('course', '/course');
         $category = new restore_path_element('category', '/course/category');
@@ -2006,7 +2006,7 @@ class restore_course_structure_step extends restore_structure_step {
      *
      * @param array $data
      */
-    public function process_customfield($data) {
+    public function process_customfield($data) { //
         $handler = core_course\customfield\course_handler::create();
         $handler->restore_instance_data_from_backup($this->task, $data);
     }

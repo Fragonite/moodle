@@ -198,6 +198,15 @@ class data_controller extends \core_customfield\data_controller {
     }
 
     /**
+     * Implement the callback for restore, so Moodle knows how to restore this element.
+     * @param // TODO
+     * @return void
+     */
+    public function restore_define_structure() {
+
+    }
+
+    /**
      * Returns value in a human-readable format
      *
      * @return mixed|null value or null if empty

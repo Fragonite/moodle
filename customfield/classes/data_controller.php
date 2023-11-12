@@ -371,6 +371,14 @@ abstract class data_controller {
     }
 
     /**
+     * TODO: Write summary
+     * @param // TODO
+     * @return void
+     */
+    public function restore_define_structure() {
+    }
+
+    /**
      * Persistent to_record parser.
      *
      * @return \stdClass

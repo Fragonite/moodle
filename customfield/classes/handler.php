@@ -497,11 +497,17 @@ abstract class handler {
         return $this->can_view($field, $instanceid) || $this->can_edit($field, $instanceid);
     }
 
+    /**
+     * TODO: Write description
+     * @param int $instanceid
+     * @param \backup_nested_element $customfieldselement
+     * @return void
+     */
     public function backup_define_structure(int $instanceid, backup_nested_element $customfieldselement): void {
-        $data = $this->get_instance_data($instanceid);
-        foreach ($data as $d) {
+        $datacontrollers = $this->get_instance_data($instanceid);
+        foreach ($datacontrollers as $controller) {
             if ($this->can_backup($d->get_field(), $instanceid)) {
-                $d->backup_define_structure($customfieldselement);
+                $controller->backup_define_structure($customfieldselement);
             }
         }
     }
