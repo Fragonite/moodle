@@ -187,11 +187,11 @@ class data_controller extends \core_customfield\data_controller {
      * @return void
      */
     public function backup_define_structure(backup_nested_element $customfieldelement): void {
-        global $DB;
+        // global $DB;
 
         // Retrieve all file records for this custom field.
         // This could be unnecessary?
-        $files = $DB->get_records('files', ['component' => 'customfield_textarea', 'filearea' => 'value']);
+        // $files = $DB->get_records('files', ['component' => 'customfield_textarea', 'filearea' => 'value']);
 
         // Confirmed to add at least images and videos to the backup.
         $customfieldelement->annotate_files('customfield_textarea', 'value', 'id');
