@@ -1808,7 +1808,7 @@ class restore_section_structure_step extends restore_structure_step {
  * course always exist before arriving here so this step will be updating
  * the course record (never inserting)
  */
-class restore_course_structure_step extends restore_structure_step {
+class restore_course_structure_step extends restore_structure_step { //
     /**
      * @var bool this gets set to true by {@link process_course()} if we are
      * restoring an old coures that used the legacy 'module security' feature.
@@ -2008,7 +2008,14 @@ class restore_course_structure_step extends restore_structure_step {
      */
     public function process_customfield($data) { //
         $handler = core_course\customfield\course_handler::create();
-        $handler->restore_instance_data_from_backup($this->task, $data);
+        $newid = $handler->restore_instance_data_from_backup($this->task, $data);
+
+        $data = (object) $data;
+        $oldid = $data->id;
+        $this->set_mapping('customfield_data', $oldid, $newid, true);
+        // $this->add_related_files('customfield_textarea', 'value', 'customfield_data');
+
+        // $handler->restore_define_structure
     }
 
     /**
@@ -2049,6 +2056,12 @@ class restore_course_structure_step extends restore_structure_step {
 
     protected function after_execute() {
         global $DB;
+
+        $this->add_related_files('customfield_textarea', 'value', 'customfield_data'); //, $field->newitemid);
+        // $customfields = $DB->get_records('backup_ids_temp', ['backupid' => $this->get_restoreid(), 'itemname' => 'customfield_data']);
+        // foreach ($customfields as $field) {
+        //     // if
+        // }
 
         // Add course related files, without itemid to match
         $this->add_related_files('course', 'summary', null);

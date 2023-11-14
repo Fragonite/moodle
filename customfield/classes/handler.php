@@ -506,7 +506,7 @@ abstract class handler {
     public function backup_define_structure(int $instanceid, backup_nested_element $customfieldselement): void {
         $datacontrollers = $this->get_instance_data($instanceid);
         foreach ($datacontrollers as $controller) {
-            if ($this->can_backup($d->get_field(), $instanceid)) {
+            if ($this->can_backup($controller->get_field(), $instanceid)) {
                 $controller->backup_define_structure($customfieldselement);
             }
         }
@@ -730,6 +730,15 @@ abstract class handler {
      */
     public function restore_instance_data_from_backup(\restore_task $task, array $data) {
         throw new \coding_exception('Must be implemented in the handler');
+    }
+
+    public function restore_define_structure(): void {
+        // $datacontrollers = $this->get_instance_data($instanceid);
+        // foreach ($datacontrollers as $controller) {
+        //     if ($this->can_backup($d->get_field(), $instanceid)) {
+        //         $controller->backup_define_structure($customfieldselement);
+        //     }
+        // }
     }
 
     /**
