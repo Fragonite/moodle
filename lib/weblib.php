@@ -1695,9 +1695,13 @@ function format_module_intro($module, $activity, $cmid, $filter=true) {
     global $CFG;
     require_once("$CFG->libdir/filelib.php");
     $context = context_module::instance($cmid);
-    $options = array('noclean' => true, 'para' => false, 'filter' => $filter, 'context' => $context, 'overflowdiv' => true);
+    $options = ['noclean' => true, 'para' => false, 'filter' => $filter, 'context' => $context, 'overflowdiv' => true];
     $intro = file_rewrite_pluginfile_urls($activity->intro, 'pluginfile.php', $context->id, 'mod_'.$module, 'intro', null);
-    return trim(format_text($intro, $activity->introformat, $options, null));
+
+    $hook = new \core_course\hook\extend_format_module_intro($module, $activity, $cmid, $intro);
+    \core\hook\manager::get_instance()->dispatch($hook);
+
+    return trim(format_text($hook->get_intro(), $activity->introformat, $options, null));
 }
 
 /**

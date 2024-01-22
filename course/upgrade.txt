@@ -22,6 +22,9 @@ information provided here is intended especially for developers.
 * New format actions classes. Those classes will eventually replace all course/lib.php content editing functions.
   All new methods are distributed in three classes formats can extend. Method can be accessed using static
   methods (see doc block of core_courseformat\formatactions for more information).
+* A new hook `extend_format_module_intro` has been introduced for extending the description of course modules.
+  The hook implements the `described_hook` interface and is intended for programmatically adding common information to course modules
+  such as policies, resources, and instructions.
 
 === 4.3 ===
 * The `core_course_renderer::course_section_cm_completion` method has been removed, and can no longer be used
