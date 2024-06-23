@@ -1667,3 +1667,23 @@ function grade_get_date_for_user_grade(\stdClass $grade, \stdClass $user): ?int 
         return $grade->datesubmitted;
     }
 }
+
+/**
+ * Apply penalty to user.
+ *
+ * @param int $userid The user ID
+ * @param grade_item $gradeitem grade item
+ * @param int $submissiondate submission date
+ * @param int $duedate due date
+ * @return int GRADE_UPDATE_OK, GRADE_UPDATE_FAILED
+ */
+function apply_grade_penalty_to_user(int $userid, $gradeitem, int $submissiondate, int $duedate): int {
+
+    try {
+        \core_grades\local\penalty\manager::apply_penalty($userid, $gradeitem, $submissiondate, $duedate);
+    } catch (\core\exception\moodle_exception $e) {
+        debugging($e->getMessage(), DEBUG_DEVELOPER);
+        return GRADE_UPDATE_FAILED;
+    }
+    return GRADE_UPDATE_OK;
+}
