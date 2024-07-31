@@ -36,7 +36,6 @@ $returnurl = optional_param('returnurl', '', PARAM_LOCALURL);
 $edit = optional_param('edit', 0, PARAM_INT);
 $reset = optional_param('reset', 0, PARAM_INT);
 $deleteeall = optional_param('deleteallrules', null, PARAM_TEXT);
-$deletedrules = optional_param('deletedrules', null, PARAM_TEXT);
 
 // Check login and permissions.
 [$context, $course, $cm] = get_context_info_array($contextid);
@@ -95,7 +94,6 @@ if ($edit) {
     $mform = new edit_penalty_form($url->out(), [
         'contextid' => $contextid,
         'edit' => $edit,
-        'deletedrules' => $deletedrules,
     ]);
 
     if ($mform->is_cancelled()) {
@@ -155,8 +153,12 @@ if (!$edit) {
     $penaltytable->define_baseurl($url);
     $penaltytable->out(30, true);
 } else {
+    // Wrap the form in a container, so we can replace the form.
+    echo $OUTPUT->box_start('generalbox', 'penalty_rule_form_container');
     // Display the form.
     $mform->display();
+    // End of the box.
+    echo $OUTPUT->box_end();
 }
 
 echo $OUTPUT->box_end();

@@ -60,3 +60,26 @@ function gradepenalty_duedate_extend_navigation_course($navigation, $course, $co
         $navigation->add_node($settingsnode);
     }
 }
+
+/**
+ * Load penalty rule form.
+ *
+ * @param array $args parameters to load the form
+ * @return string html and js of the form
+ */
+function gradepenalty_duedate_output_fragment_penalty_rule_form(array $args) {
+    $context = $args['context'];
+
+    $params = [
+        'contextid' => $context->id,
+        'action' => new moodle_url('/grade/penalty/duedate/manage_penalty_rule.php', ['contextid' => $context->id]),
+        'penaltyrules' => json_decode($args['penaltyrules'], true),
+        'finalpenaltyrule' => $args['finalpenaltyrule'],
+    ];
+
+    // Load edit penalty form.
+    $form = new gradepenalty_duedate\output\form\edit_penalty_form($params['action'], $params);
+
+    // Return html and js.
+    return $form->render();
+}

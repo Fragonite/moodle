@@ -44,9 +44,9 @@ class edit_penalty_form extends moodleform {
     public function definition() {
         global $PAGE;
         $mform = $this->_form;
-        $this->contextid = $this->_customdata['contextid'] ?? 0;
 
         // Hidden context id, value is stored in $mform.
+        $this->contextid = $this->_customdata['contextid'] ?? 1;
         $mform->addElement('hidden', 'contextid');
         $mform->setType('contextid', PARAM_INT);
         $mform->setDefault('contextid', $this->contextid);
@@ -56,16 +56,40 @@ class edit_penalty_form extends moodleform {
         $mform->setType('edit', PARAM_INT);
 
         // Get existing penalty rules, clone from parent context if not found.
-        $rules = penalty_rule::get_rules($this->contextid);
+        $finalpenaltyrule = $this->_customdata['finalpenaltyrule'] ?? null;
+        if (!is_null($finalpenaltyrule)) {
+            $repeatedrules = $this->_customdata['penaltyrules'];
+        } else {
+            $existingrules = penalty_rule::get_rules($this->contextid);
 
-        // Stored the orders of deleted rules.
-        $mform->addElement('hidden', 'deletedrules', '');
-        $mform->setType('deletedrules', PARAM_RAW);
-        $deletedrules = $this->_customdata['deletedrules'] ?? '';
-        $mform->setDefault('deletedrules', $deletedrules);
+            if (!empty($existingrules)) {
+                // Clone from parent context.
+                // Extract the final rule.
+                $finalpenaltyrule = array_pop($existingrules);
+                // We need the penalty value only.
+                $finalpenaltyrule = $finalpenaltyrule->get('penalty');
 
-        // Form repeaters. We exclude the last rule as it will not be in the repeater.
-        $repeatcount = (count($rules) > 0) ? count($rules) - 1 : 5;
+                // Other rules, turn to array so that we can use them in form repeat element.
+                $repeatedrules = [];
+                foreach ($existingrules as $rule) {
+                    $repeatedrules[] = [
+                        'overdueby' => $rule->get('overdueby'),
+                        'penalty' => $rule->get('penalty'),
+                    ];
+                }
+
+                // If empty, we add an empty rule.
+                if (empty($repeatedrules)) {
+                    $repeatedrules[] = [
+                        'overdueby' => 0,
+                        'penalty' => 0,
+                    ];
+                }
+            }
+        }
+
+        // Rule group repeater. Show default of 5 rules if there is no rule.
+        $repeatcount = !is_null($finalpenaltyrule) ? count($repeatedrules) : 5;
         $elements = [];
         $options = [];
 
@@ -89,6 +113,10 @@ class edit_penalty_form extends moodleform {
         $percenttext .= html_writer::end_tag('span');
         $elements[] = $mform->createElement('static', '', '', $percenttext);
 
+        // Button to insert new rule.
+        $elements[] = $mform->createElement('button', 'insertrule',
+            get_string('insertrule', 'gradepenalty_duedate'), [], ['customclassoverride' => 'btn-primary insertbelow']);
+
         // Delete button.
         $elements[] = $mform->createElement('button', 'deleterule',
             get_string('delete'), [], ['customclassoverride' => 'btn-danger deleterulebuttons']);
@@ -98,8 +126,10 @@ class edit_penalty_form extends moodleform {
             get_string('penaltyrule_group', 'gradepenalty_duedate'), $elements, ['&nbsp;'], false);
 
         // Create repeatable elements.
-        $this->repeat_elements([$group], $repeatcount, $options, 'rulegroupcount', 'addrules', 3,
-            get_string('addnewrules', 'gradepenalty_duedate'), true, 'deleterule');
+        $this->repeat_elements([$group], $repeatcount, $options, 'rulegroupcount', 'addrules', 0);
+
+        // We don't need "addrules" button.
+        $mform->removeElement('addrules');
 
         // Final rule input.
         $mform->addElement('text', 'finalpenaltyrule', get_string('finalpenaltyrule', 'gradepenalty_duedate'), ['size' => 3]);
@@ -108,16 +138,12 @@ class edit_penalty_form extends moodleform {
         $mform->addHelpButton('finalpenaltyrule', 'finalpenaltyrule', 'gradepenalty_duedate');
 
         // Set data.
-        if (!empty($rules)) {
+        if (!is_null($finalpenaltyrule)) {
             $data = [];
-            // Pop the last rule.
-            $finalrule = array_pop($rules);
-            $data['finalpenaltyrule'] = $finalrule->get('penalty');
-
-            // Other rules in repeater.
-            foreach ($rules as $rule) {
-                $data['overdueby[' . $rule->get('sortorder') . ']'] = $rule->get('overdueby');
-                $data['penalty[' . $rule->get('sortorder') . ']'] = $rule->get('penalty');
+            $data['finalpenaltyrule'] = $finalpenaltyrule;
+            foreach ($repeatedrules as $rulenumber => $rule) {
+                $data['overdueby[' . $rulenumber . ']'] = $rule['overdueby'];
+                $data['penalty[' . $rulenumber . ']'] = $rule['penalty'];
             }
             $this->set_data($data);
         } else {
@@ -128,14 +154,6 @@ class edit_penalty_form extends moodleform {
                 $defaultdata['penalty[' . $i . ']'] = ($i + 1) * 10;
             }
             $this->set_data($defaultdata);
-        }
-
-        // Remove the groups which are in the deleted rules.
-        $deletedrules = explode(',', $deletedrules);
-        foreach ($deletedrules as $deletedrule) {
-            if ($deletedrule !== '') {
-                $mform->removeElement('rulegroup[' . $deletedrule . ']');
-            }
         }
 
         // Delete all rules button.

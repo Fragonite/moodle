@@ -9,14 +9,14 @@ Feature: As an administrator
     And the following "courses" exist:
       | fullname | shortname | format |
       | Course 1 | C1        | topics |
-    And I navigate to "Grades > Grade penalties > Common settings" in site administration
+    And I navigate to "Grades > Grades > General settings" in site administration
     And I click on "Grade penalty" "checkbox"
     And I click on "Save changes" "button"
     Then I should see "Changes saved"
     And I navigate to "Grades > Grade penalties > Manage penalty plugins" in site administration
     And I click on "Enable Late submission penalties" "checkbox"
 
-  Scenario: Edit, add, and delete penalty rules
+  Scenario: Edit, add, and delete and insert penalty rules
     When I navigate to "Grades > Grade penalties > Late submission penalties > Manage penalty rules" in site administration
     And I click on "Edit" "button"
     And I set the following fields to these values:
@@ -51,7 +51,11 @@ Feature: As an administrator
     Then I should see "100.0%" in the "> 5 days" "table_row"
     And I click on "Edit" "button"
     When I click on "deleterule[1]" "button"
-    Then I click on "deleterule[2]" "button"
+    Then I click on "deleterule[1]" "button"
+    Then I click on "insertrule[2]" "button"
+    And I set the following fields to these values:
+      | overdueby[3][number]      |  6   |
+      | penalty[3]                |  60  |
     And I click on "Save changes" "button"
     Then I should see "Changes saved"
     Then I should see "10.0%" in the "≤ 1 day" "table_row"
@@ -59,7 +63,8 @@ Feature: As an administrator
     Then I should not see "≤ 3 days"
     Then I should see "40.0%" in the "≤ 4 days" "table_row"
     Then I should see "50.0%" in the "≤ 5 days" "table_row"
-    Then I should see "100.0%" in the "> 5 days" "table_row"
+    Then I should see "60.0%" in the "≤ 6 days" "table_row"
+    Then I should see "100.0%" in the "> 6 days" "table_row"
 
   Scenario: Override penalty rules at a course context
     When I navigate to "Grades > Grade penalties > Late submission penalties > Manage penalty rules" in site administration
@@ -118,7 +123,9 @@ Feature: As an administrator
   Scenario: Add more penalty rule options
     When I navigate to "Grades > Grade penalties > Late submission penalties > Manage penalty rules" in site administration
     And I click on "Edit" "button"
-    And I click on "Add 3 rules" "button"
+    And I click on "insertrule[0]" "button"
+    And I click on "insertrule[1]" "button"
+    And I click on "insertrule[2]" "button"
     And I set the following fields to these values:
       | overdueby[0][number]      |  1   |
       | penalty[0]                |  10  |

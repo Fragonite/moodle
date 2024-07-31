@@ -21,49 +21,31 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import * as Str from 'core/str';
 import * as notification from 'core/notification';
+import Fragment from 'core/fragment';
+import Templates from 'core/templates';
 
 /**
- * Store group label string
+ * Rule js class.
  */
-let groupLabel = '';
+class PenaltyRule {
+    constructor() {
+        this.overdueby = 0;
+        this.penalty = 0;
+    }
+}
 
 /**
  * Selectors
  */
 const SELECTORS = {
-    GROUPS: '[data-groupname]',
+    FORM_CONTAINER: '#penalty_rule_form_container',
+    INSERT_BUTTON: '.insertbelow',
     DELETE_BUTTON: '.deleterulebuttons',
-    DELETED_RULES: '[name="deletedrules"]',
-    groupWithNumber: number => `[data-groupname="rulegroup[${number}]"]`,
-    groupLabel: groupid => `[id="${groupid}_label"]`,
 };
 
 /**
- * Update the group label with rule number.
- *
- */
-const updateGroupLabel = () => {
-    // Get all the group elements.
-    let groups = document.querySelectorAll(SELECTORS.GROUPS);
-
-    // Update the group label with rule number.
-    let ruleNumber = 1;
-    groups.forEach((group) => {
-        // Skip if the group is hidden.
-        if (group.style.display === 'none') {
-            return;
-        }
-        let label = document.querySelector(SELECTORS.groupLabel(group.id));
-        if (label) {
-            label.textContent = groupLabel + " " + (ruleNumber++);
-        }
-    });
-};
-
-/**
- * Register click event for delete buttons.
+ * Register click event for delete and insert buttons.
  */
 const registerEventListeners = () => {
     // Find all delete buttons and add event listeners.
@@ -74,6 +56,15 @@ const registerEventListeners = () => {
             deleteRule(e.target);
         });
     });
+
+    // Find all insert below buttons and add event listeners.
+    const insertBelowButtons = document.querySelectorAll(SELECTORS.INSERT_BUTTON);
+    insertBelowButtons.forEach(button => {
+        button.addEventListener('click', e => {
+            e.preventDefault();
+            insertRule(e.target);
+        });
+    });
 };
 
 /**
@@ -82,32 +73,114 @@ const registerEventListeners = () => {
  * @param {Object} target
  */
 const deleteRule = target => {
-    // Extract the rule number from element name.
+    // Get all form data
+    let params = buildFormParams();
+
+    // Get the rule number from the name of clicked button.
+    let rulenumber = getRuleNumber(target);
+
+    // Remove the penalty rule.
+    let penaltyRules = JSON.parse(params.penaltyrules);
+    penaltyRules.splice(rulenumber, 1);
+    // Check if the lis is empty.
+    if (penaltyRules.length === 0) {
+        // Add an empty default penalty rule.
+        penaltyRules.push(new PenaltyRule());
+    }
+    penaltyRules = JSON.stringify(penaltyRules);
+    params.penaltyrules = penaltyRules;
+
+    loadPenaltyRuleForm(params.contextid, params);
+};
+
+/**
+ * Insert a rule group below the clicked button.
+ *
+ * @param {Object} target
+ */
+const insertRule = target => {
+    // Get all form data
+    let params = buildFormParams();
+
+    // Get the rule number from the name of clicked button.
+    let rulenumber = getRuleNumber(target);
+
+    // Insert a new penalty rule.
+    let penaltyRule = new PenaltyRule();
+    let penaltyRules = JSON.parse(params.penaltyrules);
+    penaltyRules.splice(rulenumber + 1, 0, penaltyRule);
+    penaltyRules = JSON.stringify(penaltyRules);
+    params.penaltyrules = penaltyRules;
+
+    loadPenaltyRuleForm(params.contextid, params);
+};
+
+/**
+ * Get rule number.
+ *
+ * @param {Object} target
+ */
+const getRuleNumber = target => {
     let name = target.getAttribute('name');
     let rulenumber = name.match(/\d+/)[0];
+    return parseInt(rulenumber);
+};
 
-    // Find the group element having the rule number.
-    let group = document.querySelector(SELECTORS.groupWithNumber(rulenumber));
+/**
+ * Build form parameters for loading fragment.
+ *
+ * @return {Object} form params
+ */
+const buildFormParams = () => {
+    // Get the penalty rule form in its container.
+    let container = document.querySelector(SELECTORS.FORM_CONTAINER);
+    let form = container.querySelector('form');
 
-    // Hide the group element.
-    group.style.display = 'none';
+    // Get all form data
+    let formData = new FormData(form);
 
-    // Update the group label.
-    updateGroupLabel();
+    // Get context id.
+    let contextid = formData.get('contextid');
 
-    // Add the rule number to the deleted rules input.
-    let deletedRules = document.querySelector(SELECTORS.DELETED_RULES);
-    deletedRules.value += rulenumber + ',';
+    // Get group count.
+    let groupCount = formData.get('rulegroupcount');
+
+    // Create list of penalty rules.
+    let penaltyRules = [];
+
+    // Current penalty rules.
+    for (let i = 0; i < groupCount; i++) {
+        let penaltyRule = new PenaltyRule();
+        penaltyRule.overdueby = formData.get(`overdueby[${i}][number]`) * formData.get(`overdueby[${i}][timeunit]`);
+        penaltyRule.penalty = formData.get(`penalty[${i}]`);
+        penaltyRules.push(penaltyRule);
+    }
+
+    return {
+        contextid: contextid,
+        penaltyrules: JSON.stringify(penaltyRules),
+        finalpenaltyrule: formData.get('finalpenaltyrule'),
+    };
+};
+
+/**
+ * Load the penalty rule form.
+ *
+ * @param {integer} contextid
+ * @param {object} params
+ */
+const loadPenaltyRuleForm = (contextid, params) => {
+    Fragment.loadFragment('gradepenalty_duedate', 'penalty_rule_form', contextid, params)
+        .done((html, js) => {
+            // Replace the form with the new form.
+            let formContainer = document.querySelector(SELECTORS.FORM_CONTAINER);
+            Templates.replaceNodeContents(formContainer, html, js);
+        }).fail(notification.exception);
 };
 
 /**
  * Initialize the js.
  */
 export const init = () => {
-    Str.get_string('penaltyrule_group', 'gradepenalty_duedate')
-        .done(str => {
-            groupLabel = str;
-            updateGroupLabel();
-        }).fail(notification.exception);
     registerEventListeners();
 };
