@@ -92,6 +92,11 @@ if (has_capability('moodle/grade:manage', $systemcontext)
 
         $temp->add(new admin_setting_configtext('gradereport_mygradeurl', new lang_string('externalurl', 'grades'),
                 new lang_string('externalurl_desc', 'grades'), ''));
+
+        // Enable grade penalty or not.
+        $temp->add(new admin_setting_configcheckbox('gradepenalty_enabled',
+            new lang_string('gradepenalty_enabled', 'grades'),
+            new lang_string('gradepenalty_enabled_help', 'grades'), 0));
     }
     $ADMIN->add('grades', $temp);
 
@@ -222,31 +227,26 @@ if (has_capability('moodle/grade:manage', $systemcontext)
     }
 
     // Penalty.
-    $ADMIN->add('grades', new admin_category('gradepenalty', new lang_string('gradepenalty', 'grades')));
+    if (get_config('core', 'gradepenalty_enabled')) {
+        $ADMIN->add('grades', new admin_category('gradepenalty', new lang_string('gradepenalty', 'grades')));
 
-    // General settings for penalty.
-    $temp = new admin_settingpage('penaltysettings', new lang_string('gradepenalty_general_settings', 'grades'),
-        'moodle/grade:manage');
-    if ($ADMIN->fulltree) {
-        // Enable.
-        $temp->add(new admin_setting_configcheckbox('gradepenalty_enabled',
-            new lang_string('gradepenalty_enabled', 'grades'),
-            new lang_string('gradepenalty_enabled_help', 'grades'), 0));
-        // List of modules which support penalty.
-        $supported = core_grades\local\penalty\manager::get_supported_modules();
-        if (!empty($supported)) {
+        // Supported modules.
+        $modules = core_grades\local\penalty\manager::get_supported_modules();
+        if (!empty($modules)) {
+            $temp = new admin_settingpage('supportedplugins', new lang_string('gradepenalty_supportedplugins', 'grades'),
+                'moodle/grade:manage');
+
             $options = [];
-            foreach ($supported as $module) {
+            foreach ($modules as $module) {
                 $options[$module] = new lang_string('modulename', $module);
             }
             $temp->add(new admin_setting_configmultiselect('gradepenalty_supportedplugins',
                 new lang_string('gradepenalty_supportedplugins', 'grades'),
                 new lang_string('gradepenalty_supportedplugins_help', 'grades'), [], $options));
-        }
-    }
-    $ADMIN->add('gradepenalty', $temp);
 
-    if (get_config('core', 'gradepenalty_enabled')) {
+            $ADMIN->add('gradepenalty', $temp);
+        }
+
         // External page to manage the penalty plugins.
         $temp = new admin_externalpage(
             'managepenaltyplugins',

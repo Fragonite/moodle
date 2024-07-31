@@ -337,7 +337,6 @@ $string['gradepassgreaterthangrade'] = 'The grade to pass can not be greater tha
 $string['gradepenalty'] = 'Grade penalties';
 $string['gradepenalty_enabled'] = 'Grade penalty';
 $string['gradepenalty_enabled_help'] = 'If enabled, the penalty will be applied to the grades of supported modules.';
-$string['gradepenalty_general_settings'] = 'Common settings';
 $string['gradepenalty_supportedplugins'] = 'Supported modules';
 $string['gradepenalty_supportedplugins_help'] = 'Enable the grade penalty for the selected modules.';
 $string['gradepointdefault'] = 'Grade point default';
